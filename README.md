@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CodeMentor
 
-## Getting Started
+CodeMentor est une plateforme de review de code entre etudiants. Elle permet de partager des snippets, de recevoir des retours constructifs ligne par ligne, et de progresser grace a un systeme de reputation et de badges.
 
-First, run the development server:
+## Fonctionnalites
+
+- **Authentification** : Inscription, connexion, sessions JWT
+- **Snippets** : Creation, edition, suppression, liste avec pagination et filtres
+- **Reviews** : Notation (1-5 etoiles), commentaires ligne par ligne, checklist qualite
+- **Votes** : Votes positifs/negatifs sur les reviews avec mise a jour du score en temps reel
+- **Reputation** : Score calcule a partir des votes recus
+- **Badges** : 5 badges automatiques (Premier Review, Reviewer Actif, Expert, Top Reviewer, Helpful Reviewer)
+- **Recherche** : Recherche par mot-cle, filtre par langage, tri (recent, ancien, plus reviews)
+- **Classement** : Leaderboard des meilleurs reviewers
+- **Moderation** : Signalement des reviews, gestion des signalements par les moderateurs
+- **Profil** : Profil utilisateur avec statistiques et badges
+- **Tableau de bord** : Resume de session, statistiques, moderation
+
+## Stack technique
+
+- Next.js 14 (App Router)
+- TypeScript
+- Tailwind CSS
+- PostgreSQL + Prisma ORM
+- NextAuth.js (Credentials Provider)
+- Monaco Editor
+- Zod (validation)
+- ESLint + Prettier
+
+## Prerequis
+
+- Node.js 18+
+- PostgreSQL 14+
+- npm
+
+## Installation
 
 ```bash
+# 1. Installer les dependances
+npm install
+
+# 2. Creer le fichier d'environnement
+cp .env.example .env
+
+# 3. Adapter les variables dans .env
+#    - DATABASE_URL : URL de connexion PostgreSQL
+#    - NEXTAUTH_SECRET : cle secrete pour les sessions JWT
+
+# 4. Initialiser la base de donnees
+npx prisma db push
+
+# 5. Demarrer le serveur de developpement
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+L'application sera disponible sur `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Commande               | Role                     |
+| ---------------------- | ------------------------ |
+| `npm run dev`          | Serveur de developpement |
+| `npm run build`        | Compilation production   |
+| `npm run start`        | Demarrage production     |
+| `npm run lint`         | Verification ESLint      |
+| `npm run typecheck`    | Verification TypeScript  |
+| `npm run format`       | Formatage Prettier       |
+| `npm run format:check` | Verification formatage   |
 
-## Learn More
+## Deploiement avec Docker
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+docker compose up -d
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+L'application est accessible sur `http://localhost:3000`. La base de donnees PostgreSQL est automatiquement provisionnee.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Documentation
 
-## Deploy on Vercel
+- [Architecture technique](ARCHITECTURE.md)
+- [Guide utilisateur](USER_GUIDE.md)
+- [Guide enseignant](TEACHER_GUIDE.md)
+- [FAQ](FAQ.md)
+- [Scenarios de tests](TEST_SCENARIOS.md)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Structure du projet
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/              Pages et API Routes (App Router)
+components/       Composants partages
+features/         Modules fonctionnels
+  auth/           Authentification
+  snippets/       Gestion des snippets
+  reviews/        Reviews et votes
+  moderation/     Signalements et checklist
+  reputation/     Badges
+  leaderboard/    Classement
+lib/              Prisma, session, badges, reputation
+prisma/           Schema Prisma
+```

@@ -1,0 +1,197 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design system CodeMentor
+ * -------------------------
+ * Toutes les couleurs sont définies comme variables sémantiques clair/sombre
+ * puis mappées dans tailwind.config.ts. Les classes utilitaires (.app-card,
+ * .btn-*, .field-*, .alert-*) consomment ces variables : le dark mode se
+ * propage donc automatiquement à toute l'application sans décorateur `dark:`.
+ */
+@layer base {
+  :root {
+    --background: #f8fafc; /* slate-50 */
+    --foreground: #0f172a; /* slate-950 */
+
+    --card: #ffffff;
+    --card-foreground: #0f172a;
+
+    --muted: #f1f5f9; /* slate-100 */
+    --muted-foreground: #64748b; /* slate-500 */
+
+    --border: #e2e8f0; /* slate-200 */
+    --input: #e2e8f0;
+
+    --primary: #0f172a; /* slate-950 */
+    --primary-foreground: #ffffff;
+
+    --secondary: #ffffff;
+    --secondary-foreground: #334155; /* slate-700 */
+
+    --accent: #f1f5f9; /* slate-100 */
+    --accent-foreground: #0f172a;
+
+    --destructive: #dc2626; /* red-600 */
+    --destructive-foreground: #ffffff;
+
+    --success: #16a34a; /* green-600 */
+    --success-foreground: #ffffff;
+    --success-soft: #f0fdf4; /* green-50 */
+    --success-soft-foreground: #15803d; /* green-700 */
+
+    --warning: #d97706; /* amber-600 */
+    --warning-soft: #fffbeb; /* amber-50 */
+    --warning-soft-foreground: #b45309; /* amber-700 */
+
+    --ring: #0f172a; /* slate-950 */
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: #020617; /* slate-950 */
+    --foreground: #f8fafc; /* slate-50 */
+
+    --card: #0f172a; /* slate-900 */
+    --card-foreground: #f8fafc;
+
+    --muted: #1e293b; /* slate-800 */
+    --muted-foreground: #94a3b8; /* slate-400 */
+
+    --border: #1e293b; /* slate-800 */
+    --input: #334155; /* slate-700 */
+
+    --primary: #f8fafc; /* slate-50 */
+    --primary-foreground: #0f172a;
+
+    --secondary: #1e293b; /* slate-800 */
+    --secondary-foreground: #e2e8f0; /* slate-200 */
+
+    --accent: #1e293b; /* slate-800 */
+    --accent-foreground: #f8fafc;
+
+    --destructive: #ef4444; /* red-500 */
+    --destructive-foreground: #ffffff;
+
+    --success: #22c55e; /* green-500 */
+    --success-foreground: #052e16;
+    --success-soft: #052e16; /* green-950 */
+    --success-soft-foreground: #4ade80; /* green-400 */
+
+    --warning: #f59e0b; /* amber-500 */
+    --warning-soft: #422006; /* amber-950 */
+    --warning-soft-foreground: #fbbf24; /* amber-400 */
+
+    --ring: #f8fafc; /* slate-50 */
+  }
+}
+
+@layer base {
+  body {
+    color: var(--foreground);
+    background: var(--background);
+  }
+
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Layout -------------------------------------------------------------- */
+  .page-shell {
+    @apply mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:py-10;
+  }
+
+  .page-header {
+    @apply mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground;
+  }
+
+  .page-title {
+    @apply text-3xl font-semibold tracking-tight text-foreground sm:text-4xl;
+  }
+
+  .page-description {
+    @apply max-w-2xl text-sm leading-6 text-muted-foreground;
+  }
+
+  /* Cartes -------------------------------------------------------------- */
+  .app-card {
+    @apply rounded-lg border border-border bg-card p-5 text-card-foreground shadow-sm transition;
+  }
+
+  .app-card-hover {
+    @apply hover:-translate-y-0.5 hover:border-foreground hover:shadow-md;
+  }
+
+  /* Boutons ------------------------------------------------------------- */
+  .btn-primary {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-secondary {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-secondary px-4 text-sm font-medium text-secondary-foreground transition hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-danger {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-md bg-destructive px-4 text-sm font-medium text-destructive-foreground transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-ghost {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  /* Champs de formulaire ------------------------------------------------ */
+  .field-label {
+    @apply text-sm font-medium text-secondary-foreground;
+  }
+
+  .field-control {
+    @apply h-11 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring;
+  }
+
+  .field-error {
+    @apply text-sm text-destructive;
+  }
+
+  /* Alertes ------------------------------------------------------------- */
+  .alert-error {
+    @apply rounded-md border border-destructive bg-card px-3 py-2 text-sm text-destructive;
+  }
+
+  .alert-success {
+    @apply rounded-md border border-success bg-card px-3 py-2 text-sm text-success;
+  }
+
+  /* État vide / chargement --------------------------------------------- */
+  .skeleton {
+    @apply animate-pulse rounded-md bg-muted;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Respecte les utilisateurs sensibles au mouvement. */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in,
+    .animate-slide-in,
+    .animate-scale-in {
+      animation: none;
+    }
+  }
+}
