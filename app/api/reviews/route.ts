@@ -4,10 +4,13 @@ import { createReviewSchema } from "@/features/reviews/schemas";
 import { authenticatedHandler } from "@/lib/api-handler";
 import { ApiError } from "@/lib/errors";
 import { checkAndAwardBadges } from "@/lib/badges";
+import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 
 export const POST = authenticatedHandler(
   async (request: Request, { userId }) => {
+    checkRateLimit(`review:${userId}`);
     const body = await request.json();
     const parsedBody = createReviewSchema.safeParse(body);
 
@@ -46,34 +49,37 @@ export const POST = authenticatedHandler(
       throw ApiError.conflict("Vous avez deja reviewed ce snippet.");
     }
 
-    const review = await prisma.review.create({
-      data: {
-        snippetId,
-        reviewerId: userId,
-        rating,
-        comments: {
-          create: comments.map((comment) => ({
-            lineNumber: comment.lineNumber,
-            content: comment.content,
-          })),
-        },
-      },
-      include: {
-        reviewer: {
-          select: {
-            id: true,
-            name: true,
+    const review = await prisma.$transaction(async (tx) => {
+      return tx.review.create({
+        data: {
+          snippetId,
+          reviewerId: userId,
+          rating,
+          comments: {
+            create: comments.map((comment) => ({
+              lineNumber: comment.lineNumber,
+              content: comment.content,
+              authorId: userId,
+            })),
           },
         },
-        comments: {
-          orderBy: {
-            lineNumber: "asc",
+        include: {
+          reviewer: {
+            select: { id: true, name: true },
+          },
+          comments: {
+            orderBy: { lineNumber: "asc" },
           },
         },
-      },
+      });
     });
 
-    await checkAndAwardBadges(userId);
+    checkAndAwardBadges(userId).catch((err) => {
+      logger.error("Erreur attribution badges apres review", {
+        error: String(err),
+        userId,
+      });
+    });
 
     return NextResponse.json(
       { success: true, message: "Review creee avec succes.", review },

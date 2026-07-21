@@ -30,6 +30,7 @@ model User {
   votes           Vote[]
   badges          UserBadge[]
   reports         Report[]    @relation("UserReports")
+  comments        Comment[]
 
   @@index([reputationScore])
   @@map("users")
@@ -76,14 +77,15 @@ model VerificationToken {
 }
 
 model Snippet {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   code        String
   language    String
-  isAnonymous Boolean  @default(false) @map("is_anonymous")
-  userId      String   @map("user_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  difficulty  Difficulty @default(INTERMEDIATE) @map("difficulty")
+  isAnonymous Boolean    @default(false) @map("is_anonymous")
+  userId      String     @map("user_id")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   reviews     Review[]
 
   @@index([userId])
@@ -91,6 +93,12 @@ model Snippet {
   @@index([createdAt])
   @@index([language, createdAt])
   @@map("snippets")
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
 }
 
 enum ReportStatus {
@@ -176,13 +184,16 @@ model UserBadge {
 model Comment {
   id         String   @id @default(uuid())
   reviewId   String   @map("review_id")
+  authorId   String   @map("author_id")
   lineNumber Int      @map("line_number")
   content    String
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
   review     Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([reviewId])
   @@index([reviewId, lineNumber])
+  @@index([authorId])
   @@map("comments")
 }

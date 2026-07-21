@@ -8,6 +8,8 @@ export type ErrorCode =
   | "INTERNAL_ERROR";
 
 export class ApiError extends Error {
+  retryAfter?: number;
+
   constructor(
     public readonly code: ErrorCode,
     message: string,
@@ -39,6 +41,12 @@ export class ApiError extends Error {
 
   static conflict(message = "Conflit."): ApiError {
     return new ApiError("CONFLICT", message, 409);
+  }
+
+  static rateLimited(
+    message = "Trop de requetes. Veuillez reessayer plus tard.",
+  ): ApiError {
+    return new ApiError("RATE_LIMITED", message, 429);
   }
 
   static internal(message = "Une erreur est survenue."): ApiError {

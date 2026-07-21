@@ -18,4 +18,6 @@ export function validateEnv(): void {
   }
 }
 
+validateEnv();
+
 export default env;

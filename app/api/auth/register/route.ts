@@ -4,9 +4,13 @@ import { NextResponse } from "next/server";
 import { registerSchema } from "@/features/auth/schemas";
 import { apiHandler } from "@/lib/api-handler";
 import { ApiError } from "@/lib/errors";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 
 export const POST = apiHandler(async (request: Request) => {
+  checkRateLimit(
+    `register:${request.headers.get("x-forwarded-for") ?? "unknown"}`,
+  );
   const body = await request.json();
   const parsedBody = registerSchema.safeParse(body);
 

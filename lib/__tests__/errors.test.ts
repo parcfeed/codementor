@@ -45,6 +45,13 @@ describe("ApiError", () => {
     expect(error.status).toBe(409);
   });
 
+  it("creates a rate limited error", () => {
+    const error = ApiError.rateLimited();
+
+    expect(error.code).toBe("RATE_LIMITED");
+    expect(error.status).toBe(429);
+  });
+
   it("creates an internal error", () => {
     const error = ApiError.internal();
 

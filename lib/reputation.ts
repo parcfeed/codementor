@@ -1,10 +1,15 @@
-import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
+
+import { prisma as defaultPrisma } from "@/lib/prisma";
+
+type PrismaClientOrTx = Prisma.TransactionClient | typeof defaultPrisma;
 
 export async function updateReviewerReputation(
+  client: PrismaClientOrTx,
   reviewerId: string,
   reputationChange: number,
 ) {
-  await prisma.user.update({
+  await client.user.update({
     where: { id: reviewerId },
     data: {
       reputationScore: {

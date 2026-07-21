@@ -18,6 +18,57 @@ type AuthenticatedHandler<T = unknown> = (
   context: HandlerContext & { userId: string; isModerator: boolean },
 ) => Promise<NextResponse<T>>;
 
+function toJsonResponse(
+  status: number,
+  body: Record<string, unknown>,
+): NextResponse {
+  return NextResponse.json(body, { status }) as NextResponse;
+}
+
+function handleError(error: unknown, url: string): NextResponse {
+  if (error instanceof ApiError) {
+    if (error.status >= 500) {
+      logger.error(error.message, { url, code: error.code });
+    }
+    const response = toJsonResponse(error.status, error.toResponse());
+    if (error.retryAfter !== undefined) {
+      response.headers.set("Retry-After", String(error.retryAfter));
+    }
+    return response;
+  }
+
+  if (error instanceof ZodError) {
+    const errors = error.flatten().fieldErrors;
+    logger.warn("Validation error", { url, errors });
+    return toJsonResponse(400, {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Les donnees transmises sont invalides.",
+        details: { errors },
+      },
+    });
+  }
+
+  const prismaError = handlePrismaError(error);
+  if (prismaError.status !== 500) {
+    return toJsonResponse(prismaError.status, prismaError.toResponse());
+  }
+
+  logger.error("Unhandled error", {
+    url,
+    error: error instanceof Error ? error.message : String(error),
+  });
+
+  return toJsonResponse(500, ApiError.internal().toResponse());
+}
+
+async function getSessionOrThrow() {
+  const { getAuthSession } = await import("@/lib/session");
+  const session = await getAuthSession();
+  return session;
+}
+
 export function apiHandler<T>(handler: ApiHandler<T>): ApiHandler<T> {
   return async (req, context) => {
     try {
@@ -33,20 +84,12 @@ export function authenticatedHandler<T>(
 ): ApiHandler<T> {
   return async (req, context) => {
     try {
-      const { getAuthSession } = await import("@/lib/session");
-      const session = await getAuthSession();
+      const session = await getSessionOrThrow();
 
       if (!session?.user) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Vous devez etre connecte.",
-            error: {
-              code: "UNAUTHORIZED",
-              message: "Vous devez etre connecte.",
-            },
-          },
-          { status: 401 },
+        return toJsonResponse(
+          401,
+          ApiError.unauthorized().toResponse(),
         ) as NextResponse<T>;
       }
 
@@ -66,31 +109,19 @@ export function moderatorHandler<T>(
 ): ApiHandler<T> {
   return async (req, context) => {
     try {
-      const { getAuthSession } = await import("@/lib/session");
-      const session = await getAuthSession();
+      const session = await getSessionOrThrow();
 
       if (!session?.user) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Vous devez etre connecte.",
-            error: {
-              code: "UNAUTHORIZED",
-              message: "Vous devez etre connecte.",
-            },
-          },
-          { status: 401 },
+        return toJsonResponse(
+          401,
+          ApiError.unauthorized().toResponse(),
         ) as NextResponse<T>;
       }
 
       if (!session.user.isModerator) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Acces moderateur requis.",
-            error: { code: "FORBIDDEN", message: "Acces moderateur requis." },
-          },
-          { status: 403 },
+        return toJsonResponse(
+          403,
+          ApiError.forbidden("Acces moderateur requis.").toResponse(),
         ) as NextResponse<T>;
       }
 
@@ -103,57 +134,4 @@ export function moderatorHandler<T>(
       return handleError(error, req.url) as NextResponse<T>;
     }
   };
-}
-
-function formatError(
-  status: number,
-  code: string,
-  message: string,
-  details?: Record<string, unknown>,
-) {
-  return NextResponse.json(
-    {
-      success: false,
-      message,
-      error: { code, message, ...(details ? { details } : {}) },
-    },
-    { status },
-  );
-}
-
-function handleError(error: unknown, url: string): NextResponse {
-  if (error instanceof ApiError) {
-    if (error.status >= 500) {
-      logger.error(error.message, { url, code: error.code });
-    }
-    return formatError(error.status, error.code, error.message, error.details);
-  }
-
-  if (error instanceof ZodError) {
-    const errors = error.flatten().fieldErrors;
-    logger.warn("Validation error", { url, errors });
-    return formatError(
-      400,
-      "VALIDATION_ERROR",
-      "Les donnees transmises sont invalides.",
-      { errors },
-    );
-  }
-
-  const prismaError = handlePrismaError(error);
-  if (prismaError.status !== 500) {
-    return formatError(
-      prismaError.status,
-      prismaError.code,
-      prismaError.message,
-      prismaError.details,
-    );
-  }
-
-  logger.error("Unhandled error", {
-    url,
-    error: error instanceof Error ? error.message : String(error),
-  });
-
-  return formatError(500, "INTERNAL_ERROR", "Une erreur est survenue.");
 }
