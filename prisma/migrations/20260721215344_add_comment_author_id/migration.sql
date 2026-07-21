@@ -1,11 +1,14 @@
-/*
-  Warnings:
+-- Add author_id as nullable first
+ALTER TABLE "comments" ADD COLUMN "author_id" TEXT;
 
-  - Added the required column `author_id` to the `comments` table without a default value. This is not possible if the table is not empty.
+-- Backfill: comment author = parent review reviewer
+UPDATE "comments" c
+SET "author_id" = r."reviewer_id"
+FROM "reviews" r
+WHERE c."review_id" = r."id" AND c."author_id" IS NULL;
 
-*/
--- AlterTable
-ALTER TABLE "comments" ADD COLUMN     "author_id" TEXT NOT NULL;
+-- Make the column required once backfill is complete
+ALTER TABLE "comments" ALTER COLUMN "author_id" SET NOT NULL;
 
 -- CreateIndex
 CREATE INDEX "comments_author_id_idx" ON "comments"("author_id");

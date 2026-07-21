@@ -4,6 +4,7 @@ type LogEntry = {
   level: LogLevel;
   message: string;
   timestamp: string;
+  requestId?: string;
   context?: Record<string, unknown>;
 };
 
@@ -39,9 +40,14 @@ class Logger {
 
   constructor() {
     this.transports.push((entry) => {
-      const prefix = `[${entry.timestamp}] [${entry.level.toUpperCase()}]`;
-      const line = entry.context
-        ? `${prefix} ${entry.message} ${JSON.stringify(sanitize(entry.context))}`
+      const rid = entry.requestId ? ` [${entry.requestId}]` : "";
+      const prefix = `[${entry.timestamp}]${rid} [${entry.level.toUpperCase()}]`;
+      const ctx = entry.context
+        ? { ...entry.context, requestId: undefined }
+        : undefined;
+      const cleanCtx = ctx && Object.keys(ctx).length > 0 ? ctx : undefined;
+      const line = cleanCtx
+        ? `${prefix} ${entry.message} ${JSON.stringify(sanitize(cleanCtx))}`
         : `${prefix} ${entry.message}`;
 
       switch (entry.level) {
@@ -66,10 +72,15 @@ class Logger {
     message: string,
     context?: Record<string, unknown>,
   ): void {
+    const requestId =
+      context && typeof context.requestId === "string"
+        ? (context.requestId as string)
+        : undefined;
     const entry: LogEntry = {
       level,
       message,
       timestamp: new Date().toISOString(),
+      requestId,
       context: context ? sanitize(context) : undefined,
     };
     for (const transport of this.transports) {

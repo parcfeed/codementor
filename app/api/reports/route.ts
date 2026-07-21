@@ -10,11 +10,19 @@ export const GET = moderatorHandler(async (request: NextRequest) => {
     50,
     Math.max(1, parseInt(url.searchParams.get("limit") ?? "20", 10)),
   );
+  const status = url.searchParams.get("status");
+
+  const where =
+    status &&
+    ["PENDING", "REVIEWED", "DISMISSED"].includes(status.toUpperCase())
+      ? { status: status.toUpperCase() as "PENDING" | "REVIEWED" | "DISMISSED" }
+      : {};
 
   const [reports, total] = await Promise.all([
     prisma.report.findMany({
       skip: (page - 1) * limit,
       take: limit,
+      where,
       include: {
         reporter: {
           select: { id: true, name: true },
@@ -34,7 +42,7 @@ export const GET = moderatorHandler(async (request: NextRequest) => {
       },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.report.count(),
+    prisma.report.count({ where }),
   ]);
 
   return NextResponse.json({

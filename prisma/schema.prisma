@@ -141,6 +141,7 @@ model Report {
   @@index([reviewId])
   @@index([reporterId])
   @@index([status])
+  @@index([createdAt])
   @@map("reports")
 }
 
@@ -178,6 +179,7 @@ model UserBadge {
   badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
 
   @@id([userId, badgeId])
+  @@index([badgeId])
   @@map("user_badges")
 }
 

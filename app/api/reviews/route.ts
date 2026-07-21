@@ -74,7 +74,7 @@ export const POST = authenticatedHandler(
       });
     });
 
-    checkAndAwardBadges(userId).catch((err) => {
+    await checkAndAwardBadges(userId).catch((err) => {
       logger.error("Erreur attribution badges apres review", {
         error: String(err),
         userId,

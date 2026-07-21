@@ -25,10 +25,18 @@ function toJsonResponse(
   return NextResponse.json(body, { status }) as NextResponse;
 }
 
-function handleError(error: unknown, url: string): NextResponse {
+function generateRequestId(): string {
+  return crypto.randomUUID();
+}
+
+function handleError(
+  error: unknown,
+  url: string,
+  requestId?: string,
+): NextResponse {
   if (error instanceof ApiError) {
     if (error.status >= 500) {
-      logger.error(error.message, { url, code: error.code });
+      logger.error(error.message, { url, code: error.code, requestId });
     }
     const response = toJsonResponse(error.status, error.toResponse());
     if (error.retryAfter !== undefined) {
@@ -39,7 +47,7 @@ function handleError(error: unknown, url: string): NextResponse {
 
   if (error instanceof ZodError) {
     const errors = error.flatten().fieldErrors;
-    logger.warn("Validation error", { url, errors });
+    logger.warn("Validation error", { url, errors, requestId });
     return toJsonResponse(400, {
       success: false,
       error: {
@@ -58,23 +66,36 @@ function handleError(error: unknown, url: string): NextResponse {
   logger.error("Unhandled error", {
     url,
     error: error instanceof Error ? error.message : String(error),
+    requestId,
   });
 
   return toJsonResponse(500, ApiError.internal().toResponse());
 }
 
-async function getSessionOrThrow() {
+async function resolveSession(): Promise<{
+  userId: string;
+  isModerator: boolean;
+}> {
   const { getAuthSession } = await import("@/lib/session");
   const session = await getAuthSession();
-  return session;
+
+  if (!session?.user) {
+    throw ApiError.unauthorized();
+  }
+
+  return {
+    userId: session.user.id,
+    isModerator: session.user.isModerator ?? false,
+  };
 }
 
 export function apiHandler<T>(handler: ApiHandler<T>): ApiHandler<T> {
   return async (req, context) => {
+    const requestId = generateRequestId();
     try {
       return await handler(req, context);
     } catch (error) {
-      return handleError(error, req.url) as NextResponse<T>;
+      return handleError(error, req.url, requestId) as NextResponse<T>;
     }
   };
 }
@@ -83,23 +104,17 @@ export function authenticatedHandler<T>(
   handler: AuthenticatedHandler<T>,
 ): ApiHandler<T> {
   return async (req, context) => {
+    const requestId = generateRequestId();
     try {
-      const session = await getSessionOrThrow();
-
-      if (!session?.user) {
-        return toJsonResponse(
-          401,
-          ApiError.unauthorized().toResponse(),
-        ) as NextResponse<T>;
-      }
+      const session = await resolveSession();
 
       return await handler(req, {
         ...context,
-        userId: session.user.id,
-        isModerator: session.user.isModerator ?? false,
+        userId: session.userId,
+        isModerator: session.isModerator,
       });
     } catch (error) {
-      return handleError(error, req.url) as NextResponse<T>;
+      return handleError(error, req.url, requestId) as NextResponse<T>;
     }
   };
 }
@@ -108,30 +123,21 @@ export function moderatorHandler<T>(
   handler: AuthenticatedHandler<T>,
 ): ApiHandler<T> {
   return async (req, context) => {
+    const requestId = generateRequestId();
     try {
-      const session = await getSessionOrThrow();
+      const session = await resolveSession();
 
-      if (!session?.user) {
-        return toJsonResponse(
-          401,
-          ApiError.unauthorized().toResponse(),
-        ) as NextResponse<T>;
-      }
-
-      if (!session.user.isModerator) {
-        return toJsonResponse(
-          403,
-          ApiError.forbidden("Acces moderateur requis.").toResponse(),
-        ) as NextResponse<T>;
+      if (!session.isModerator) {
+        throw ApiError.forbidden("Acces moderateur requis.");
       }
 
       return await handler(req, {
         ...context,
-        userId: session.user.id,
+        userId: session.userId,
         isModerator: true,
       });
     } catch (error) {
-      return handleError(error, req.url) as NextResponse<T>;
+      return handleError(error, req.url, requestId) as NextResponse<T>;
     }
   };
 }

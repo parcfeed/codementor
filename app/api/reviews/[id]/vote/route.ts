@@ -78,7 +78,7 @@ export const POST = authenticatedHandler(
       return { score, newUserVote };
     });
 
-    Promise.all([
+    await Promise.all([
       checkAndAwardBadges(review.reviewerId).catch((err) => {
         logger.error("Erreur attribution badges reviewer", {
           error: String(err),
