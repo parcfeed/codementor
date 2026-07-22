@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
+import { DIFFICULTIES } from "@/lib/constants";
 import { LANGUAGES } from "@/features/snippets/constants";
 
 export function SnippetFilters() {
@@ -13,6 +14,9 @@ export function SnippetFilters() {
 
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [language, setLanguage] = useState(searchParams.get("language") ?? "");
+  const [difficulty, setDifficulty] = useState(
+    searchParams.get("difficulty") ?? "",
+  );
   const [sort, setSort] = useState(searchParams.get("sort") ?? "recent");
 
   function applyFilters() {
@@ -20,6 +24,7 @@ export function SnippetFilters() {
 
     if (search) params.set("search", search);
     if (language) params.set("language", language);
+    if (difficulty) params.set("difficulty", difficulty);
     if (sort && sort !== "recent") params.set("sort", sort);
     params.set("page", "1");
 
@@ -34,7 +39,7 @@ export function SnippetFilters() {
   }
 
   return (
-    <div className="grid gap-3 md:grid-cols-[1fr_160px_160px_auto] md:items-end">
+    <div className="grid gap-3 md:grid-cols-[1fr_160px_160px_160px_auto] md:items-end">
       <Field label="Rechercher" htmlFor="search">
         {({ id, className }) => (
           <input
@@ -69,6 +74,30 @@ export function SnippetFilters() {
         )}
       </Field>
 
+      <Field label="Difficulte" htmlFor="difficulty">
+        {({ id, className }) => (
+          <select
+            className={className}
+            id={id}
+            value={difficulty}
+            onChange={(event) => {
+              setDifficulty(event.target.value);
+            }}
+          >
+            <option value="">Toutes</option>
+            {DIFFICULTIES.map((d) => (
+              <option key={d} value={d}>
+                {d === "BEGINNER"
+                  ? "Debutant"
+                  : d === "INTERMEDIATE"
+                    ? "Intermediaire"
+                    : "Avance"}
+              </option>
+            ))}
+          </select>
+        )}
+      </Field>
+
       <Field label="Trier par" htmlFor="sort">
         {({ id, className }) => (
           <select
@@ -80,8 +109,8 @@ export function SnippetFilters() {
             }}
           >
             <option value="recent">Plus recents</option>
-            <option value="oldest">Plus anciens</option>
-            <option value="reviews">Plus reviews</option>
+            <option value="popular">Populaires</option>
+            <option value="votes">Les plus votes</option>
           </select>
         )}
       </Field>

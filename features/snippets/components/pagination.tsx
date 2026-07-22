@@ -8,6 +8,7 @@ type PaginationProps = {
   basePath: string;
   search?: string;
   language?: string;
+  difficulty?: string;
   sort?: string;
 };
 
@@ -17,6 +18,7 @@ export function Pagination({
   basePath,
   search,
   language,
+  difficulty,
   sort,
 }: PaginationProps) {
   if (totalPages <= 1) {
@@ -30,6 +32,7 @@ export function Pagination({
 
     if (search) params.set("search", search);
     if (language) params.set("language", language);
+    if (difficulty) params.set("difficulty", difficulty);
     if (sort && sort !== "recent") params.set("sort", sort);
 
     return `${basePath}?${params.toString()}`;

@@ -8,12 +8,14 @@ import { SnippetFilters } from "@/features/snippets/components/snippet-filters";
 import { SNIPPETS_PER_PAGE } from "@/features/snippets/constants";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession } from "@/lib/session";
+import { buildSnippetQuery } from "@/lib/snippets-query";
 
 type SnippetsPageProps = {
   searchParams: {
     page?: string;
     search?: string;
     language?: string;
+    difficulty?: string;
     sort?: string;
   };
 };
@@ -28,37 +30,14 @@ export default async function SnippetsPage({
   }
 
   const page = Math.max(1, Number(searchParams.page) || 1);
-  const search = searchParams.search ?? "";
-  const language = searchParams.language ?? "";
-  const sort = searchParams.sort ?? "recent";
   const skip = (page - 1) * SNIPPETS_PER_PAGE;
 
-  const where: Record<string, unknown> = {};
-
-  if (language) {
-    where.language = language;
-  }
-
-  if (search) {
-    where.code = {
-      contains: search,
-      mode: "insensitive",
-    };
-  }
-
-  let orderBy: Record<string, unknown>;
-
-  switch (sort) {
-    case "oldest":
-      orderBy = { createdAt: "asc" };
-      break;
-    case "reviews":
-      orderBy = { reviews: { _count: "desc" } };
-      break;
-    default:
-      orderBy = { createdAt: "desc" };
-      break;
-  }
+  const { where, orderBy } = buildSnippetQuery({
+    search: searchParams.search,
+    language: searchParams.language,
+    difficulty: searchParams.difficulty,
+    sort: searchParams.sort,
+  });
 
   const [snippets, totalCount] = await Promise.all([
     prisma.snippet.findMany({
@@ -140,9 +119,12 @@ export default async function SnippetsPage({
             currentPage={page}
             totalPages={totalPages}
             basePath="/snippets"
-            search={search || undefined}
-            language={language || undefined}
-            sort={sort !== "recent" ? sort : undefined}
+            search={searchParams.search || undefined}
+            language={searchParams.language || undefined}
+            difficulty={searchParams.difficulty || undefined}
+            sort={
+              searchParams.sort !== "recent" ? searchParams.sort : undefined
+            }
           />
         </div>
       </div>

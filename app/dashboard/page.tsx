@@ -4,7 +4,7 @@ import { Code, MessageSquare, Star, ThumbsUp, Award } from "lucide-react";
 
 import { SessionSummary } from "@/features/auth/components/session-summary";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession } from "@/lib/session";
+import { getAuthSession, isCurrentUserModerator } from "@/lib/session";
 
 const STAT_ICONS = {
   snippets: Code,
@@ -47,6 +47,8 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  const isModerator = await isCurrentUserModerator();
+
   const [
     userStats,
     votesGiven,
@@ -81,10 +83,10 @@ export default async function DashboardPage() {
     prisma.userBadge.count({
       where: { userId: session.user.id },
     }),
-    session.user.isModerator
+    isModerator
       ? prisma.report.count({ where: { status: "PENDING" } })
       : Promise.resolve(0),
-    session.user.isModerator ? prisma.report.count() : Promise.resolve(0),
+    isModerator ? prisma.report.count() : Promise.resolve(0),
   ]);
 
   const votesReceived = votesReceivedAggregate._sum.value ?? 0;
@@ -144,7 +146,7 @@ export default async function DashboardPage() {
         </aside>
       </div>
 
-      {session.user.isModerator ? (
+      {isModerator ? (
         <section className="app-card mt-6">
           <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>

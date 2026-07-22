@@ -2,9 +2,10 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it, beforeEach, vi } from "vitest";
 
-vi.mock("@/lib/session", () => ({
-  getAuthSession: vi.fn(),
-}));
+vi.mock("@/lib/session", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/session")>();
+  return { ...actual, getAuthSession: vi.fn() };
+});
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {

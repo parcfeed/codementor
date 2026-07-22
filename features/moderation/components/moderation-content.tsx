@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { EmptyState } from "@/components/ui/empty-state";
 import { ReportCard } from "@/features/moderation/components/report-card";
+import { extractErrorMessage } from "@/lib/api-client";
 
 type Report = {
   id: string;
@@ -27,6 +28,7 @@ type ModerationContentProps = {
 export function ModerationContent({ reports }: ModerationContentProps) {
   const router = useRouter();
   const [localReports, setLocalReports] = useState(reports);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleUpdateStatus(
     reportId: string,
@@ -38,12 +40,17 @@ export function ModerationContent({ reports }: ModerationContentProps) {
       body: JSON.stringify({ status }),
     });
 
+    setError(null);
+
     if (response.ok) {
       setLocalReports((prev) =>
         prev.map((r) => (r.id === reportId ? { ...r, status } : r)),
       );
 
       router.refresh();
+    } else {
+      const payload = await response.json().catch(() => ({}));
+      setError(extractErrorMessage(payload, "Erreur lors de la mise a jour."));
     }
   }
 
@@ -95,6 +102,16 @@ export function ModerationContent({ reports }: ModerationContentProps) {
               />
             ))}
           </div>
+        </div>
+      ) : null}
+
+      {error ? (
+        <div
+          aria-live="polite"
+          className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          role="alert"
+        >
+          {error}
         </div>
       ) : null}
 

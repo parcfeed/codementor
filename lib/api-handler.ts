@@ -3,7 +3,7 @@ import { ZodError } from "zod";
 
 import { ApiError, handlePrismaError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
-import { prisma } from "@/lib/prisma";
+import { revalidateModerator } from "@/lib/session";
 
 type HandlerContext = {
   params: Record<string, string>;
@@ -135,12 +135,9 @@ export function moderatorHandler<T>(
       // Le JWT peut etre perime (isModerator revoque en base apres la
       // connexion). Revalider directement contre la base pour cette
       // route sensible plutot que de faire confiance au token signe.
-      const freshUser = await prisma.user.findUnique({
-        where: { id: session.userId },
-        select: { isModerator: true },
-      });
+      const isModerator = await revalidateModerator(session.userId);
 
-      if (!freshUser?.isModerator) {
+      if (!isModerator) {
         throw ApiError.forbidden(
           "Acces moderateur requis (privileges revoques).",
         );
