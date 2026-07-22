@@ -20,7 +20,7 @@ export const LANGUAGES = [
 
 export type Language = (typeof LANGUAGES)[number]["value"];
 
-export const DIFFICULTIES = ["debutant", "intermediaire", "avance"] as const;
+export const DIFFICULTIES = ["BEGINNER", "INTERMEDIATE", "ADVANCED"] as const;
 export type Difficulty = (typeof DIFFICULTIES)[number];
 
 export const SORT_OPTIONS = ["recent", "popular", "votes"] as const;

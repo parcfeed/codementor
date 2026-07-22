@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createSnippetSchema } from "@/features/snippets/schemas";
+import { DIFFICULTIES, PAGINATION } from "@/lib/constants";
 import { apiHandler, authenticatedHandler } from "@/lib/api-handler";
 import { ApiError } from "@/lib/errors";
-import { PAGINATION } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
 export const POST = authenticatedHandler(
@@ -17,12 +17,13 @@ export const POST = authenticatedHandler(
       });
     }
 
-    const { code, language, isAnonymous } = parsedBody.data;
+    const { code, language, difficulty, isAnonymous } = parsedBody.data;
 
     const snippet = await prisma.snippet.create({
       data: {
         code,
         language,
+        difficulty,
         isAnonymous,
         userId,
       },
@@ -54,15 +55,25 @@ export const GET = apiHandler(async (request: NextRequest) => {
     Math.max(1, Number(searchParams.get("limit")) || 10),
   );
   const language = searchParams.get("language");
+  const difficulty = searchParams.get("difficulty");
   const skip = (page - 1) * limit;
 
-  const where = language ? { language } : {};
+  const isValidDifficulty = (
+    v: string | null,
+  ): v is (typeof DIFFICULTIES)[number] =>
+    v !== null && (DIFFICULTIES as readonly string[]).includes(v);
+
+  const where = {
+    ...(language ? { language } : {}),
+    ...(isValidDifficulty(difficulty) ? { difficulty } : {}),
+  };
 
   const [snippets, totalCount] = await Promise.all([
     prisma.snippet.findMany({
       where,
       select: {
         id: true,
+        difficulty: true,
         language: true,
         isAnonymous: true,
         createdAt: true,

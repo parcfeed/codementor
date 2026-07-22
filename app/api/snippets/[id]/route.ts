@@ -54,13 +54,14 @@ export const PATCH = authenticatedHandler(
       });
     }
 
-    const { code, language, isAnonymous } = parsedBody.data;
+    const { code, language, difficulty, isAnonymous } = parsedBody.data;
 
     const updatedSnippet = await prisma.snippet.update({
       where: { id: params.id },
       data: {
         code,
         language,
+        difficulty,
         isAnonymous,
       },
       include: {
