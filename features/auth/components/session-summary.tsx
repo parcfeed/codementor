@@ -30,16 +30,12 @@ export function SessionSummary() {
         </div>
         <div className="flex items-center justify-between gap-4">
           <dt className="text-muted-foreground">Email</dt>
-          <dd className="font-medium text-foreground">{session.user.email}</dd>
-        </div>
-        <div className="flex items-center justify-between gap-4">
-          <dt className="text-muted-foreground">Reputation</dt>
-          <dd className="font-medium text-foreground">
-            {session.user.reputationScore}
+          <dd className="truncate font-medium text-foreground">
+            {session.user.email}
           </dd>
         </div>
       </dl>
-      <SignOutButton />
+      <SignOutButton variant="ghost" />
     </div>
   );
 }
