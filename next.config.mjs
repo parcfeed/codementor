@@ -20,18 +20,26 @@ const nextConfig = {
             value: "max-age=63072000; includeSubDomains; preload",
           },
           {
-            // CSP : 'unsafe-inline' sur script-src est necessaire pour :
-            //   - next-themes (script inline de theme FOUC)
-            //   - Next.js App Router (bootstrap inline _NEXT_DATA_)
-            // 'unsafe-eval' est necessaire en dev (Fast Refresh utilise eval()),
-            // mais retire en prod car inutile dans le bundle buildé.
+            // CSP :
+            //   - 'unsafe-inline' sur script-src : next-themes (FOUC),
+            //     Next.js App Router (_NEXT_DATA_ bootstrap inline)
+            //   - 'unsafe-eval' en dev : Fast Refresh (eval() interne)
+            //   - cdn.jsdelivr.net : Monaco Editor (@monaco-editor/react)
+            //   - worker-src blob: : web workers de Monaco (syntax highlighting)
             key: "Content-Security-Policy",
             value: (() => {
               const isDev = process.env.NODE_ENV === "development";
               const scriptSrc = isDev
-                ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-                : "script-src 'self' 'unsafe-inline'";
-              return `default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'`;
+                ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net"
+                : "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net";
+              return [
+                "default-src 'self'",
+                `${scriptSrc}`,
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+                "worker-src 'self' blob:",
+                "connect-src 'self' https://cdn.jsdelivr.net",
+                "frame-ancestors 'none'",
+              ].join("; ");
             })(),
           },
         ],
