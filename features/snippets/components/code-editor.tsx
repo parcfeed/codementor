@@ -8,7 +8,7 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
 
 type CodeEditorProps = {
   value: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   language: string;
   height?: string;
   readOnly?: boolean;
@@ -22,7 +22,7 @@ export function CodeEditor({
   readOnly = false,
 }: CodeEditorProps) {
   function handleChange(value: string | undefined) {
-    onChange(value ?? "");
+    onChange?.(value ?? "");
   }
 
   return (

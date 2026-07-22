@@ -123,7 +123,6 @@ export default async function SnippetDetailPage({
           <CodeEditor
             language={snippet.language}
             value={snippet.code}
-            onChange={() => {}}
             height="500px"
             readOnly
           />
