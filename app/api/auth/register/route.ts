@@ -8,9 +8,9 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 
 export const POST = apiHandler(async (request: Request) => {
-  checkRateLimit(
-    `register:${request.headers.get("x-forwarded-for") ?? "unknown"}`,
-  );
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  checkRateLimit(`register:${ip}`);
   const body = await request.json();
   const parsedBody = registerSchema.safeParse(body);
 

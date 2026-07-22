@@ -32,11 +32,7 @@ export const PAGINATION = {
   MAX_LIMIT: 50,
 } as const;
 
-export const REPUTATION = {
-  MIN_REPUTATION_TO_VOTE: 50,
-  VOTE_UP_REWARD: 10,
-  VOTE_DOWN_PENALTY: 5,
-  ACCEPTED_ANSWER_REWARD: 15,
-  ANSWER_REWARD: 10,
-  SNIPPET_REWARD: 5,
-} as const;
+// Systeme de reputation intentionnellement simple : +1/-1 par vote, sans seuil de participation.
+// Les constantes declarees dans une version anterieure (VOTE_UP_REWARD=10, etc.) n'ont jamais
+// ete utilisees et ont ete supprimees pour eviter la confusion. Si un bareme asymetrique est
+// souhaite, re-introduire les constantes ici et les appliquer dans votes/route.ts.

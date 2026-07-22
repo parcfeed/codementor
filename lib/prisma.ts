@@ -1,3 +1,5 @@
+import "@/lib/env"; // valide les variables d'environnement au premier import du client Prisma
+
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "@/generated/prisma/client";
