@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createSnippetSchema } from "@/features/snippets/schemas";
-import { DIFFICULTIES, PAGINATION } from "@/lib/constants";
+import { DIFFICULTIES, PAGINATION, SORT_OPTIONS } from "@/lib/constants";
 import { apiHandler, authenticatedHandler } from "@/lib/api-handler";
 import { ApiError } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
@@ -56,6 +56,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
   );
   const language = searchParams.get("language");
   const difficulty = searchParams.get("difficulty");
+  const sort = searchParams.get("sort");
   const skip = (page - 1) * limit;
 
   const isValidDifficulty = (
@@ -63,10 +64,20 @@ export const GET = apiHandler(async (request: NextRequest) => {
   ): v is (typeof DIFFICULTIES)[number] =>
     v !== null && (DIFFICULTIES as readonly string[]).includes(v);
 
+  const isValidSort = (v: string | null): v is (typeof SORT_OPTIONS)[number] =>
+    v !== null && (SORT_OPTIONS as readonly string[]).includes(v);
+
   const where = {
     ...(language ? { language } : {}),
     ...(isValidDifficulty(difficulty) ? { difficulty } : {}),
   };
+
+  const orderBy: { createdAt: "desc" } | { reviews: { _count: "desc" } } =
+    isValidSort(sort)
+      ? sort === "popular" || sort === "votes"
+        ? { reviews: { _count: "desc" as const } }
+        : { createdAt: "desc" }
+      : { createdAt: "desc" };
 
   const [rawSnippets, totalCount] = await Promise.all([
     prisma.snippet.findMany({
@@ -89,9 +100,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
           },
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy,
       skip,
       take: limit,
     }),

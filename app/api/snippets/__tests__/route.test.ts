@@ -107,6 +107,96 @@ describe("GET /api/snippets — difficulty filter", () => {
     expect(json.snippets[1].user).toEqual({ id: "u2", name: "Bob" });
   });
 
+  it("defaults to createdAt desc when no sort param", async () => {
+    const { prisma } = await import("@/lib/prisma");
+    (prisma.snippet.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.snippet.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+    const response = await GET(
+      createRequest("http://localhost:3000/api/snippets"),
+      { params: {} },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prisma.snippet.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { createdAt: "desc" },
+      }),
+    );
+  });
+
+  it("uses createdAt desc for ?sort=recent", async () => {
+    const { prisma } = await import("@/lib/prisma");
+    (prisma.snippet.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.snippet.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+    const response = await GET(
+      createRequest("http://localhost:3000/api/snippets?sort=recent"),
+      { params: {} },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prisma.snippet.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { createdAt: "desc" },
+      }),
+    );
+  });
+
+  it("uses review count desc for ?sort=popular", async () => {
+    const { prisma } = await import("@/lib/prisma");
+    (prisma.snippet.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.snippet.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+    const response = await GET(
+      createRequest("http://localhost:3000/api/snippets?sort=popular"),
+      { params: {} },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prisma.snippet.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { reviews: { _count: "desc" } },
+      }),
+    );
+  });
+
+  it("uses review count desc for ?sort=votes", async () => {
+    const { prisma } = await import("@/lib/prisma");
+    (prisma.snippet.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.snippet.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+    const response = await GET(
+      createRequest("http://localhost:3000/api/snippets?sort=votes"),
+      { params: {} },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prisma.snippet.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { reviews: { _count: "desc" } },
+      }),
+    );
+  });
+
+  it("ignores invalid sort and defaults to createdAt desc", async () => {
+    const { prisma } = await import("@/lib/prisma");
+    (prisma.snippet.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.snippet.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+    const response = await GET(
+      createRequest("http://localhost:3000/api/snippets?sort=invalid"),
+      { params: {} },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prisma.snippet.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { createdAt: "desc" },
+      }),
+    );
+  });
+
   it("ignores invalid difficulty and does not error", async () => {
     const { prisma } = await import("@/lib/prisma");
     (prisma.snippet.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
