@@ -24,7 +24,7 @@ export const POST = authenticatedHandler(
 
     const snippet = await prisma.snippet.findUnique({
       where: { id: snippetId },
-      select: { id: true, userId: true },
+      select: { id: true, userId: true, code: true },
     });
 
     if (!snippet) {
@@ -34,6 +34,14 @@ export const POST = authenticatedHandler(
     if (snippet.userId === userId) {
       throw ApiError.forbidden(
         "Vous ne pouvez pas reviewer votre propre snippet.",
+      );
+    }
+
+    const maxLine = snippet.code.split("\n").length;
+    const invalidComment = comments.find((c) => c.lineNumber > maxLine);
+    if (invalidComment) {
+      throw ApiError.validation(
+        `Le numero de ligne ${invalidComment.lineNumber} depasse la longueur du snippet (${maxLine} lignes).`,
       );
     }
 
