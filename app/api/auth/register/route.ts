@@ -22,6 +22,11 @@ export const POST = apiHandler(async (request: Request) => {
 
   const { email, name, password } = parsedBody.data;
 
+  // Second facteur : protege un email cible meme si l'IP est falsifiee.
+  // Seuil plus strict (5/min) car un meme email ne devrait pas tenter
+  // de s'inscrire plusieurs fois.
+  checkRateLimit(`register-email:${email.toLowerCase()}`, 5);
+
   const existingUser = await prisma.user.findUnique({
     where: { email },
     select: { id: true },

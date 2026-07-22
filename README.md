@@ -102,5 +102,5 @@ prisma/           Schema Prisma
 
 - **Rate limiting en memoire** : Le rate limiting (`lib/rate-limit.ts`) utilise un compteur en memoire (Map process-local). En deploiement mono-instance (Docker seul), la limite s'applique correctement. En deploiement multi-instance (plusieurs replicas, serverless), chaque instance aurait son propre compteur : la limite effective deviendrait `N × limite declaree`. Si un deploiement distribue est envisage, migrer vers un store partage (Redis via Upstash, ou table Postgres avec UPSERT atomique).
 
-- **Rate limiting et IP client** : Le rate limiting sur `/api/auth/register` identifie le client via l'entete `x-forwarded-for` (premier segment avant la virgule). Ce fonctionnement suppose que l'application est derriere un reverse proxy (Vercel, nginx, etc.) qui reecrit cet entete avec l'IP reelle du client avant qu'elle n'atteigne l'application. Ne pas exposer l'application directement sans un tel proxy.
+- **Rate limiting sur l'inscription** : `/api/auth/register` combine deux facteurs — l'IP (`x-forwarded-for`, premier segment) et l'email soumis (seuil plus strict : 5/min). Le facteur IP suppose un reverse proxy de confiance en amont (non garanti avec le `docker-compose.yml` actuel) ; le facteur email reste efficace independamment de la fiabilite de l'IP, puisqu'il cible directement le compte vise.
 ```
