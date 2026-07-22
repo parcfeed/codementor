@@ -38,6 +38,7 @@ const nextConfig = {
                 "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
                 "worker-src 'self' blob:",
                 "connect-src 'self' https://cdn.jsdelivr.net",
+                "font-src 'self' data: https://cdn.jsdelivr.net",
                 "frame-ancestors 'none'",
               ].join("; ");
             })(),
