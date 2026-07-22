@@ -37,6 +37,8 @@ export const GET = apiHandler(async (_request: NextRequest, { params }) => {
 
 export const PATCH = authenticatedHandler(
   async (request: NextRequest, { userId, params }) => {
+    // Deux requetes (findUnique + update) plutot qu'un updateMany avec count,
+    // pour distinguer 404 (snippet introuvable) de 403 (pas l'auteur).
     const snippet = await prisma.snippet.findUnique({
       where: { id: params.id },
       select: { userId: true },
@@ -89,6 +91,7 @@ export const PATCH = authenticatedHandler(
 
 export const DELETE = authenticatedHandler(
   async (_request: NextRequest, { userId, params }) => {
+    // Meme logique que PATCH : deux requetes pour distinguer 404 de 403.
     const snippet = await prisma.snippet.findUnique({
       where: { id: params.id },
       select: { userId: true },
