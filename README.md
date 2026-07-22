@@ -97,4 +97,8 @@ features/         Modules fonctionnels
   leaderboard/    Classement
 lib/              Prisma, session, badges, reputation
 prisma/           Schema Prisma
+
+## Limitations connues
+
+- **Rate limiting en memoire** : Le rate limiting (`lib/rate-limit.ts`) utilise un compteur en memoire (Map process-local). En deploiement mono-instance (Docker seul), la limite s'applique correctement. En deploiement multi-instance (plusieurs replicas, serverless), chaque instance aurait son propre compteur : la limite effective deviendrait `N × limite declaree`. Si un deploiement distribue est envisage, migrer vers un store partage (Redis via Upstash, ou table Postgres avec UPSERT atomique).
 ```
