@@ -18,6 +18,7 @@ export function CreateSnippetForm() {
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [acceptedLicense, setAcceptedLicense] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,6 +42,11 @@ export function CreateSnippetForm() {
         language: fieldErrors.language?.[0],
       });
 
+      return;
+    }
+
+    if (!acceptedLicense) {
+      setFormError("Tu dois accepter la licence MIT pour publier ce snippet.");
       return;
     }
 
@@ -105,6 +111,27 @@ export function CreateSnippetForm() {
         />
         {errors.code ? <p className="field-error">{errors.code}</p> : null}
       </div>
+
+      <label className="flex cursor-pointer items-center gap-3">
+        <input
+          className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+          type="checkbox"
+          checked={acceptedLicense}
+          onChange={(event) => setAcceptedLicense(event.target.checked)}
+          required
+        />
+        <span className="text-sm text-secondary-foreground">
+          J'accepte que ce snippet soit publie sous licence{" "}
+          <a
+            className="underline underline-offset-2 hover:text-foreground"
+            href="https://opensource.org/licenses/MIT"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            MIT
+          </a>
+        </span>
+      </label>
 
       <label className="flex cursor-pointer items-center gap-3">
         <input
