@@ -8,6 +8,9 @@ vi.mock("@/lib/session", () => ({
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
+    user: {
+      findUnique: vi.fn(),
+    },
     snippet: {
       findUnique: vi.fn(),
     },
@@ -46,6 +49,9 @@ describe("GET /api/snippets/[id]/reveal-author", () => {
       user: { id: "mod-1", isModerator: true },
     });
     const { prisma } = await import("@/lib/prisma");
+    (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      isModerator: true,
+    });
     (prisma.snippet.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: "s1",
       isAnonymous: true,
@@ -70,6 +76,9 @@ describe("GET /api/snippets/[id]/reveal-author", () => {
       user: { id: "mod-1", isModerator: true },
     });
     const { prisma } = await import("@/lib/prisma");
+    (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      isModerator: true,
+    });
     (prisma.snippet.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: "s1",
       isAnonymous: true,

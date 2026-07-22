@@ -8,6 +8,9 @@ vi.mock("@/lib/session", () => ({
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
+    user: {
+      findUnique: vi.fn(),
+    },
     report: {
       findUnique: vi.fn(),
       update: vi.fn(),
@@ -40,6 +43,9 @@ describe("PATCH /api/reports/[id]", () => {
       user: { id: "mod-1", isModerator: true },
     });
     const { prisma } = await import("@/lib/prisma");
+    (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      isModerator: true,
+    });
     (prisma.report.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: "report-1",
     });
@@ -60,6 +66,9 @@ describe("PATCH /api/reports/[id]", () => {
       user: { id: "mod-1", isModerator: true },
     });
     const { prisma } = await import("@/lib/prisma");
+    (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      isModerator: true,
+    });
     (prisma.report.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: "report-1",
     });
@@ -106,6 +115,10 @@ describe("PATCH /api/reports/[id]", () => {
     (getAuthSession as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: { id: "mod-1", isModerator: true },
     });
+    const { prisma } = await import("@/lib/prisma");
+    (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      isModerator: true,
+    });
 
     const response = await PATCH(createRequest({ status: "INVALID" }), {
       params: { id: "report-1" },
@@ -122,6 +135,9 @@ describe("PATCH /api/reports/[id]", () => {
       user: { id: "mod-1", isModerator: true },
     });
     const { prisma } = await import("@/lib/prisma");
+    (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      isModerator: true,
+    });
     (prisma.report.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
       null,
     );
@@ -133,5 +149,25 @@ describe("PATCH /api/reports/[id]", () => {
 
     expect(response.status).toBe(404);
     expect(body.success).toBe(false);
+  });
+
+  it("returns 403 if moderator status was revoked in database since login", async () => {
+    const { getAuthSession } = await import("@/lib/session");
+    (getAuthSession as ReturnType<typeof vi.fn>).mockResolvedValue({
+      user: { id: "mod-1", isModerator: true },
+    });
+    const { prisma } = await import("@/lib/prisma");
+    (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      isModerator: false,
+    });
+
+    const response = await PATCH(createRequest({ status: "REVIEWED" }), {
+      params: { id: "report-1" },
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.success).toBe(false);
+    expect(body.error.message).toContain("revoques");
   });
 });
