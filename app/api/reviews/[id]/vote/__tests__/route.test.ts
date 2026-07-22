@@ -2,6 +2,8 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it, beforeEach, vi } from "vitest";
 
+import { ApiError } from "@/lib/errors";
+
 const mockTx = {
   vote: {
     findUnique: vi.fn(),
@@ -201,5 +203,44 @@ describe("POST /api/reviews/[id]/vote", () => {
     expect(response.status).toBe(400);
     expect(body.success).toBe(false);
     expect(body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("does not persist the vote if reputation update fails inside the transaction", async () => {
+    const { prisma } = await import("@/lib/prisma");
+    (prisma.review.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "review-1",
+      reviewerId: "reviewer-1",
+    });
+
+    mockTx.vote.findUnique.mockResolvedValue(null);
+
+    const { updateReviewerReputation } = await import("@/lib/reputation");
+    (
+      updateReviewerReputation as ReturnType<typeof vi.fn>
+    ).mockRejectedValueOnce(new Error("DB write failed"));
+
+    const response = await POST(createRequest({ value: 1 }), {
+      params: { id: "review-1" },
+    });
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body.success).toBe(false);
+  });
+
+  it("returns 429 when rate limit is exceeded", async () => {
+    const { checkRateLimit } = await import("@/lib/rate-limit");
+    const rateError = ApiError.rateLimited();
+    rateError.retryAfter = 30;
+    (checkRateLimit as ReturnType<typeof vi.fn>).mockImplementationOnce(() => {
+      throw rateError;
+    });
+
+    const response = await POST(createRequest({ value: 1 }), {
+      params: { id: "review-1" },
+    });
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBe("30");
   });
 });
