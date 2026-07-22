@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockRefresh = vi.fn();
@@ -39,5 +39,71 @@ describe("SnippetFilters", () => {
 
     const sort = screen.getByLabelText("Trier par");
     expect(sort).toBeInTheDocument();
+  });
+});
+
+describe("SnippetFilters - applying filters", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("navigates with the correct query string when difficulty is selected", () => {
+    render(<SnippetFilters />);
+
+    fireEvent.change(screen.getByLabelText("Difficulte"), {
+      target: { value: "ADVANCED" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Appliquer les filtres de recherche",
+      }),
+    );
+
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.stringContaining("difficulty=ADVANCED"),
+    );
+  });
+
+  it("navigates on Enter key in the search field, same URL as the Filtrer button", () => {
+    render(<SnippetFilters />);
+
+    const searchInput = screen.getByPlaceholderText(
+      "Rechercher dans le code...",
+    );
+    fireEvent.change(searchInput, { target: { value: "async function" } });
+    fireEvent.keyDown(searchInput, { key: "Enter" });
+
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.stringContaining("search=async"),
+    );
+  });
+
+  it("combines language, difficulty and sort in the same navigation call", () => {
+    render(<SnippetFilters />);
+
+    act(() => {
+      fireEvent.change(screen.getByLabelText("Langage"), {
+        target: { value: "python" },
+      });
+    });
+    act(() => {
+      fireEvent.change(screen.getByLabelText("Difficulte"), {
+        target: { value: "BEGINNER" },
+      });
+    });
+    act(() => {
+      fireEvent.change(screen.getByLabelText("Trier par"), {
+        target: { value: "popular" },
+      });
+    });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Appliquer les filtres de recherche",
+      }),
+    );
+
+    const calledUrl = mockPush.mock.calls[0][0] as string;
+    expect(calledUrl).toContain("language=python");
+    expect(calledUrl).toContain("difficulty=BEGINNER");
+    expect(calledUrl).toContain("sort=popular");
   });
 });
