@@ -23,11 +23,16 @@ const nextConfig = {
             // CSP : 'unsafe-inline' sur script-src est necessaire pour :
             //   - next-themes (script inline de theme FOUC)
             //   - Next.js App Router (bootstrap inline _NEXT_DATA_)
-            // Si un nonce CSP est souhaite, generer le nonce dans le middleware
-            // et le passer via nextConfig.compiler ou un <script nonce="...">.
+            // 'unsafe-eval' est necessaire en dev (Fast Refresh utilise eval()),
+            // mais retire en prod car inutile dans le bundle buildé.
             key: "Content-Security-Policy",
-            value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'",
+            value: (() => {
+              const isDev = process.env.NODE_ENV === "development";
+              const scriptSrc = isDev
+                ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+                : "script-src 'self' 'unsafe-inline'";
+              return `default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'`;
+            })(),
           },
         ],
       },
