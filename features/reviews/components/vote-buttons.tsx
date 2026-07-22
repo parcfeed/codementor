@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
+
+import { extractErrorMessage } from "@/lib/api-client";
 
 type VoteButtonsProps = {
   reviewId: string;
@@ -21,12 +23,21 @@ export function VoteButtons({
   const [score, setScore] = useState(initialScore);
   const [userVote, setUserVote] = useState(initialUserVote);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   async function handleVote(value: number) {
     if (isSubmitting || isOwnReview) {
       return;
     }
 
+    setError(null);
     setIsSubmitting(true);
 
     const previousVote = userVote;
@@ -50,6 +61,11 @@ export function VoteButtons({
       if (!response.ok) {
         setScore(previousScore);
         setUserVote(previousVote);
+        setError(
+          extractErrorMessage(result, "Impossible d'enregistrer le vote."),
+        );
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => setError(null), 5000);
 
         return;
       }
@@ -60,41 +76,51 @@ export function VoteButtons({
     } catch {
       setScore(previousScore);
       setUserVote(previousVote);
+      setError("Une erreur reseau est survenue.");
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setError(null), 5000);
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        aria-label="Vote positif"
-        className={`flex h-7 items-center gap-1 rounded-md border px-2 text-xs font-medium transition ${
-          userVote === 1
-            ? "border-success bg-success-soft text-success-soft-foreground"
-            : "border-border text-muted-foreground hover:bg-accent"
-        } ${isOwnReview ? "cursor-not-allowed opacity-50" : ""}`}
-        type="button"
-        disabled={isSubmitting || isOwnReview}
-        onClick={() => handleVote(1)}
-      >
-        <ThumbsUp aria-hidden="true" className="h-3.5 w-3.5" />
-        <span>{score}</span>
-      </button>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <button
+          aria-label="Vote positif"
+          className={`flex h-7 items-center gap-1 rounded-md border px-2 text-xs font-medium transition ${
+            userVote === 1
+              ? "border-success bg-success-soft text-success-soft-foreground"
+              : "border-border text-muted-foreground hover:bg-accent"
+          } ${isOwnReview ? "cursor-not-allowed opacity-50" : ""}`}
+          type="button"
+          disabled={isSubmitting || isOwnReview}
+          onClick={() => handleVote(1)}
+        >
+          <ThumbsUp aria-hidden="true" className="h-3.5 w-3.5" />
+          <span>{score}</span>
+        </button>
 
-      <button
-        aria-label="Vote negatif"
-        className={`flex h-7 items-center gap-1 rounded-md border px-2 text-xs font-medium transition ${
-          userVote === -1
-            ? "border-destructive bg-destructive/10 text-destructive"
-            : "border-border text-muted-foreground hover:bg-accent"
-        } ${isOwnReview ? "cursor-not-allowed opacity-50" : ""}`}
-        type="button"
-        disabled={isSubmitting || isOwnReview}
-        onClick={() => handleVote(-1)}
-      >
-        <ThumbsDown aria-hidden="true" className="h-3.5 w-3.5" />
-      </button>
+        <button
+          aria-label="Vote negatif"
+          className={`flex h-7 items-center gap-1 rounded-md border px-2 text-xs font-medium transition ${
+            userVote === -1
+              ? "border-destructive bg-destructive/10 text-destructive"
+              : "border-border text-muted-foreground hover:bg-accent"
+          } ${isOwnReview ? "cursor-not-allowed opacity-50" : ""}`}
+          type="button"
+          disabled={isSubmitting || isOwnReview}
+          onClick={() => handleVote(-1)}
+        >
+          <ThumbsDown aria-hidden="true" className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      {error ? (
+        <p aria-live="polite" className="text-xs text-destructive">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

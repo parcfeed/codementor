@@ -5,6 +5,7 @@ import { type FormEvent, useState } from "react";
 
 import { CodeEditor } from "@/features/snippets/components/code-editor";
 import { LANGUAGES } from "@/features/snippets/constants";
+import { extractErrorMessage } from "@/lib/api-client";
 import { updateSnippetSchema } from "@/features/snippets/schemas";
 
 type EditSnippetFormProps = {
@@ -67,7 +68,7 @@ export function EditSnippetForm({
       const result = await response.json();
 
       if (!response.ok) {
-        setFormError(result.message ?? "Une erreur est survenue.");
+        setFormError(extractErrorMessage(result, "Une erreur est survenue."));
 
         return;
       }

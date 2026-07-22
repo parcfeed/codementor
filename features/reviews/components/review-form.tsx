@@ -6,6 +6,7 @@ import { type FormEvent, useState } from "react";
 import { ChecklistReview } from "@/features/moderation/components/checklist-review";
 import { CHECKLIST_ITEMS } from "@/features/moderation/schemas";
 import { RatingInput } from "@/features/reviews/components/rating-input";
+import { extractErrorMessage } from "@/lib/api-client";
 import { createReviewSchema } from "@/features/reviews/schemas";
 
 type ReviewFormProps = {
@@ -112,7 +113,7 @@ export function ReviewForm({ snippetId }: ReviewFormProps) {
       const result = await response.json();
 
       if (!response.ok) {
-        setFormError(result.message ?? "Une erreur est survenue.");
+        setFormError(extractErrorMessage(result, "Une erreur est survenue."));
 
         return;
       }

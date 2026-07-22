@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { Modal } from "@/components/ui/modal";
+import { extractErrorMessage } from "@/lib/api-client";
 import { reportSchema } from "@/features/moderation/schemas";
 
 type ReportDialogProps = {
@@ -44,7 +45,7 @@ export function ReportDialog({ reviewId, onClose }: ReportDialogProps) {
       const result = await response.json();
 
       if (!response.ok) {
-        setError(result.message ?? "Une erreur est survenue.");
+        setError(extractErrorMessage(result, "Une erreur est survenue."));
 
         return;
       }

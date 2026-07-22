@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Modal } from "@/components/ui/modal";
+import { extractErrorMessage } from "@/lib/api-client";
 
 type DeleteSnippetButtonProps = {
   snippetId: string;
@@ -27,7 +28,7 @@ export function DeleteSnippetButton({ snippetId }: DeleteSnippetButtonProps) {
       const result = await response.json();
 
       if (!response.ok) {
-        setError(result.message ?? "Une erreur est survenue.");
+        setError(extractErrorMessage(result, "Une erreur est survenue."));
 
         return;
       }

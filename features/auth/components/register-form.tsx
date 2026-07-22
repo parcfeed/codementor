@@ -7,6 +7,7 @@ import { type FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
+import { extractErrorMessage } from "@/lib/api-client";
 import { registerSchema } from "@/features/auth/schemas";
 
 type FieldErrors = {
@@ -52,11 +53,11 @@ export function RegisterForm() {
     });
 
     if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as {
-        message?: string;
-      } | null;
+      const payload = await response.json().catch(() => null);
       setIsSubmitting(false);
-      setFormError(payload?.message ?? "Impossible de creer le compte.");
+      setFormError(
+        extractErrorMessage(payload, "Impossible de creer le compte."),
+      );
       return;
     }
 
