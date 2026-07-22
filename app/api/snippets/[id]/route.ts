@@ -27,7 +27,12 @@ export const GET = apiHandler(async (_request: NextRequest, { params }) => {
     throw ApiError.notFound("Snippet introuvable.");
   }
 
-  return NextResponse.json({ success: true, snippet });
+  const maskedSnippet = {
+    ...snippet,
+    user: snippet.isAnonymous ? null : snippet.user,
+  };
+
+  return NextResponse.json({ success: true, snippet: maskedSnippet });
 });
 
 export const PATCH = authenticatedHandler(

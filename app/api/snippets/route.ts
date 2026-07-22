@@ -68,7 +68,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
     ...(isValidDifficulty(difficulty) ? { difficulty } : {}),
   };
 
-  const [snippets, totalCount] = await Promise.all([
+  const [rawSnippets, totalCount] = await Promise.all([
     prisma.snippet.findMany({
       where,
       select: {
@@ -97,6 +97,11 @@ export const GET = apiHandler(async (request: NextRequest) => {
     }),
     prisma.snippet.count({ where }),
   ]);
+
+  const snippets = rawSnippets.map((s) => ({
+    ...s,
+    user: s.isAnonymous ? null : s.user,
+  }));
 
   const totalPages = Math.ceil(totalCount / limit);
 

@@ -72,6 +72,41 @@ describe("GET /api/snippets — difficulty filter", () => {
     expect(json.snippets).toHaveLength(1);
   });
 
+  it("masks user when isAnonymous is true for listing", async () => {
+    const { prisma } = await import("@/lib/prisma");
+    (prisma.snippet.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      {
+        id: "s1",
+        language: "python",
+        difficulty: "BEGINNER",
+        isAnonymous: true,
+        createdAt: new Date(),
+        user: { id: "u1", name: "Alice" },
+        _count: { reviews: 0 },
+      },
+      {
+        id: "s2",
+        language: "javascript",
+        difficulty: "INTERMEDIATE",
+        isAnonymous: false,
+        createdAt: new Date(),
+        user: { id: "u2", name: "Bob" },
+        _count: { reviews: 1 },
+      },
+    ]);
+    (prisma.snippet.count as ReturnType<typeof vi.fn>).mockResolvedValue(2);
+
+    const response = await GET(
+      createRequest("http://localhost:3000/api/snippets"),
+      { params: {} },
+    );
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.snippets[0].user).toBeNull();
+    expect(json.snippets[1].user).toEqual({ id: "u2", name: "Bob" });
+  });
+
   it("ignores invalid difficulty and does not error", async () => {
     const { prisma } = await import("@/lib/prisma");
     (prisma.snippet.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
