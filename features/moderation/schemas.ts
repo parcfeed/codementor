@@ -7,6 +7,12 @@ export const reportSchema = z.object({
     .max(500, "La raison ne peut pas depasser 500 caracteres."),
 });
 
+export const reportsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  status: z.enum(["PENDING", "REVIEWED", "DISMISSED"]).optional(),
+});
+
 export const CHECKLIST_ITEMS = [
   { id: "readable", label: "Le code est lisible." },
   { id: "variables", label: "Les variables sont bien nommees." },
