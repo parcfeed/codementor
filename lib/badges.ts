@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 
 type BadgeType = {
   id: string;
+  slug: string;
   name: string;
   description: string;
   icon: string;
@@ -17,6 +18,7 @@ async function getBadgeDefinitions() {
   cachedBadges = await prisma.badge.findMany({
     select: {
       id: true,
+      slug: true,
       name: true,
       description: true,
       icon: true,
@@ -67,20 +69,20 @@ export async function checkAndAwardBadges(userId: string) {
 
     let qualifies = false;
 
-    switch (badge.name) {
-      case "Premier Review":
+    switch (badge.slug) {
+      case "premier-review":
         qualifies = user._count.reviews >= 1;
         break;
-      case "Reviewer Actif":
+      case "reviewer-actif":
         qualifies = user._count.reviews >= 10;
         break;
-      case "Expert":
+      case "expert":
         qualifies = user.reputationScore >= 100;
         break;
-      case "Top Reviewer":
+      case "top-reviewer":
         qualifies = user.reputationScore >= 250;
         break;
-      case "Helpful Reviewer":
+      case "helpful-reviewer":
         qualifies = upvotesReceived >= 50;
         break;
     }
